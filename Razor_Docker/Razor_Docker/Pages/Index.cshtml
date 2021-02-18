@@ -1,0 +1,30 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+<div class="text-center">
+
+    <div class="m-1 p-1">
+
+        <h3 class="display-4">歡迎</h3>
+        <p>創建第一个 ASP.NET Core項目.</p>
+        <h4 class="bg-success text-xs-center p-1 text-white"> @Model.Message</h4>
+        <table class="table table-sm table-striped">
+            <thead>
+                <tr><th>ID</th><th>名稱</th><th>分類</th><th>價格</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var p in Model.Products)
+                {
+                    <tr>
+                        <td>@p.ProductID</td>
+                        <td>@p.Name</td>
+                        <td>@p.Category</td>
+                        <td>￥@p.Price.ToString("F2")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
