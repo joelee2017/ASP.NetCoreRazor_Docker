@@ -178,3 +178,34 @@ css link 中加入 asp-append-version="true" 可對緩存進行破壞。
 
 ------
 
+##### 五、將正在運行的容器保存為本地Docker
+
+展示修改文件
+
+```powershell
+docker exec exampleApp4000 cat /app/wwwroot/css/site.css
+
+容器操作容器，須確保容器是在運行中
+docker exec
+
+-it 代表這是一個交付是命令，需要在 powershell 中使用
+docker exec -it exampleApp4000 /bin/bash
+
+網絡的問題，導致你無法正常安裝VIM工具
+apt-get update
+apt-get install vim 確認y
+
+查詢有哪些文件
+ls -l
+
+進入vim 文件
+vim /app/wwwroot/css/site.css
+
+:q 離開
+:wq 保存後離開
+exit 離開當前進入容器
+
+將修改後的容器創建成新的鏡像
+docker commit exampleApp4000 ltm0203/exampleapp:changed
+```
+
