@@ -1,4 +1,7 @@
+
+
 # ASP.NetCoreRazor_Docker
+
 Docker練習
 
 參考源：深入浅出 ASP.NET Core 与 Docker 入门课程目录
@@ -133,3 +136,45 @@ docker stop exampleApp6500
 ```
 
 docker kill 無法將正在運行中的容器刪除，但會不斷的嘗試關閉動作，進而造成 Deadlock 現象將引發崩潰癱瘓。
+
+------
+
+##### 四、複製文件到正在運行的Docker容器中
+
+至專案修改樣式路徑wwwroot\css\site.css
+
+```css
+.text-white{
+  color:red !important;
+}
+
+.bg-success{
+  background-color: rgb(71, 71, 71) !important;
+} 
+```
+
+修改一個容器，除非在不得以的情況下否則不建議使用!!
+
+```powershell
+先啟動
+docker start exampleApp3000 exampleApp4000 
+
+修改會履蓋掉原來的資料，成功後無任何訊息。
+docker cp .\Razor_Docker\wwwroot\css\site.css exampleApp4000:/app/wwwroot/css/site.css
+
+檢查對容器的修改
+docker diff exampleApp4000
+```
+
+列出結果標首字母代表意義：
+A 表示已將一個文件或文件夾添加到容器中。
+C 表示文件或文件夾已被修改。如果是文件夾，表示該文件夾內的文件已被添加或刪除。
+D 表示文件或文件夾已從容器中刪除。
+
+```asp.net core razor
+css link 中加入 asp-append-version="true" 可對緩存進行破壞。
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
+```
+
+------
+
