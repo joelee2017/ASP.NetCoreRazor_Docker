@@ -3,6 +3,8 @@ Docker練習
 
 參考源：深入浅出 ASP.NET Core 与 Docker 入门课程目录
 
+建議配合該視頻影片、圖文進行學習
+
 https://www.52abp.com/yoyomooc/aspnet-core-mvc-in-docker-index
 
 ------
@@ -64,7 +66,8 @@ dotnet restore ##還原
 dotnet publish ##打包
 dotnet publish --framework net5.0 --configuration Release --output dist 
 
-創建一個自定義鏡像
+創建一個自定義鏡像 (檔案名稱皆為小寫)
+docker build  -t 檔名小寫 -f 路徑
 docker build  -t razor_docker/exampleapp -f "Razor_Docker/Dockerfile" .
 
 ```
@@ -77,7 +80,56 @@ docker build  -t razor_docker/exampleapp -f "Razor_Docker/Dockerfile" .
 
 本練習是使用 visual studio 補助工具生成 Dockerfile。
 
-dotnet publish 中的 dist 資料夾，若是沒有指定專案路徑下，會與專案sln檔同層之中這需要注意!!
+dotnet publish 中的 dist 資料夾，若是沒有指定專案路徑下，會與專案sln檔同層之中注意!!
 
 ------
 
+##### 四、Docker鏡像創建容器的幾種方法
+
+```powershell
+建立容器
+docker create -p 3000:80 --name exampleApp3000 razor_docker/exampleapp
+
+查詢所有容器列表 
+docker ps -a
+
+命令省略了未運行的容器
+docker ps 
+
+查詢不論是否運行的容器
+-a 
+
+啟動容器 - 若發生異常請確認port是否被佔用。
+docker start exampleApp3000 
+
+啟動所有容器
+docker start $(docker ps -aq)
+
+停止容器
+docker stop exampleApp3000
+
+停止所有容器
+docker stop $(docker ps -q)
+
+不建議使用，會直接將容器刪除
+docker kill 檔案名稱
+
+獲取容器輸出日誌
+docker logs exampleApp3000
+
+啟動後監控
+docker start exampleApp3000 先啟動
+docker logs -f exampleApp3000 進入容器
+Control+C 來停止顯示輸出信息。而容器不受推出docker logs命令的影響。
+
+使用一個命令創建和啟動容器，合併docker create和docker start命令的效果
+docker run -p 5000:80 --name exampleApp5000 razor_docker/exampleapp
+
+Linux或macOS，使用 Control+C 會直接停止容器。Windows 系統，Control+C 單純退出，容器則繼續運行，必須額外使用停止容器命令。
+
+自動刪除容器，會在停止容器後自動刪除
+docker run -p 6500:80 --rm --name exampleApp6500 razor_docker/exampleapp
+docker stop exampleApp6500
+```
+
+docker kill 無法將正在運行中的容器刪除，但會不斷的嘗試關閉動作，進而造成 Deadlock 現象將引發崩潰癱瘓。
