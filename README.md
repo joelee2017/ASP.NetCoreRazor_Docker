@@ -64,6 +64,13 @@ docker rmi -f $(docker image ls -aq)
 創建Dockerfile文件
 
 ```powershell
+手動自建 Dockerfile
+FROM mcr.microsoft.com/dotnet/core/aspnet:3.1
+COPY dist /app
+WORKDIR /app
+EXPOSE 80/tcp
+ENTRYPOINT ["dotnet", "YoYoMooc.ExampleApp.dll"]
+
 預備的應用程序鏡像
 dotnet restore ##還原
 dotnet publish ##打包
@@ -207,5 +214,19 @@ exit 離開當前進入容器
 
 將修改後的容器創建成新的鏡像
 docker commit exampleApp4000 ltm0203/exampleapp:changed
+```
+
+------
+
+##### 六、發布Docker鏡像到Dockhub倉庫
+
+請先建立DockerHub帳號 https://hub.docker.com/
+
+```powershell
+建立一個鏡象
+docker tag razor_docker/exampleapp:latest ltm0203/exampleapp:unchange
+
+登入docker hub
+docker login -u 用户名 -p 密码
 ```
 
