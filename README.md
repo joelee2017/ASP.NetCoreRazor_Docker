@@ -228,5 +228,19 @@ docker tag razor_docker/exampleapp:latest ltm0203/exampleapp:unchange
 
 登入docker hub
 docker login -u 用户名 -p 密码
+
+推送鏡像到倉庫
+docker push ltm0203/exampleapp:changed
+docker push ltm0203/exampleapp:unchange
+
+拉取
+docker pull ltm0203/exampleapp
+
+若不存在請先推送
+docker tag razor_docker/exampleapp:latest ltm0203/exampleapp:latest
+docker push ltm0203/exampleapp:latest
+
+使用完後請登出
+docker logout
 ```
 
