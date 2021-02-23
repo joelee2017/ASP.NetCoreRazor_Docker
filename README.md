@@ -348,3 +348,45 @@ docker rm -f vtest
 
 ------
 
+##### 八、如何使用Docker Volume管理機密數據
+
+驗證了數據文件不能存放在容器中應該單獨管理。那麼現在我們學習如何使用Docker卷來解決數據文件丟失的問題，因為它可以將數據文件保存在容器之外，同時還可以通過在容器中創建數據文件。
+
+更新Dockerfile文件
+
+```dockerfile
+FROM alpine:3.9
+
+VOLUME /data
+
+WORKDIR /data
+ENTRYPOINT (test -e message.txt && echo "文件已存在" \
+    || (echo "创建文件中..." \
+    && echo 你好, Docker 时间: $(date '+%X') > message.txt)) && cat message.txt
+```
+
+添加了參數`VOLUME`,該命令會告訴Docker，任何存在`/data`中的文件都會被保存到一個卷中。我們是事先知道我們的數據文件會存放在/data文件夾中，所以才會指定路徑到/data中。
+
+> 注意，在容器中運行的應用程序，它是不會知道`/data`這個文件夾是一個特殊的存在，它依然會像正常在容器中運行的其他文件一樣，會被讀取和寫入數據。
+>
+> 
+
+```powershell
+創立
+docker build . -t docker_razor/vtest -f "Razor_Docker/Dockerfile.volumes"
+
+創建一個卷
+docker volume create --name testdata
+
+創建容器
+docker run --name vtest2 -v testdata:/data docker_razor/vtest
+
+刪除後在運行，確認狀態，數據卷存在資料就不會被刪除
+docker rm -f vtest2
+docker run --name vtest2 -v testdata:/data docker_razor/vtest
+由回傳時間可以看出，與建立時間相同，得到資料還是原來那份。
+
+查看一個鏡像是否使用了卷
+docker inspect docker_razor/vtest
+```
+

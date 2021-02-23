@@ -1,4 +1,7 @@
 FROM alpine:3.9
+
+VOLUME /data
+
 WORKDIR /data
 ENTRYPOINT (test -e message.txt && echo "文件已存在" \
     || (echo "創建文件中..." \
