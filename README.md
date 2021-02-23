@@ -311,3 +311,40 @@ docker exec -it exampleAppWin cmd
 
 ------
 
+##### 八、Docker中的數據卷(Volume)和網絡(NetWork)介紹
+
+開始正式的網絡和卷的學習之前，保證環境一致性是很重要的事情。首先，切換我們的容器環境為Linux平台。然後刪除當前所有的容器，後面我們會重新創建它們。
+
+```powershell
+刪除所有容器
+docker rm -f $(docker ps -aq)
+```
+
+根目錄中創建一個名為Dockerfile.volumes的文件。
+
+```powershell
+FROM alpine:3.9
+WORKDIR /data
+ENTRYPOINT (test -e message.txt && echo "文件已存在" \
+    || (echo "創建文件中..." \
+    && echo 你好, Docker 時間： $(date '+%X') > message.txt)) && cat message.txt
+```
+
+創建鏡像、運行
+
+```powershell
+創立
+docker build . -t docker_razor/vtest -f "Razor_Docker/Dockerfile.volumes"
+
+運行
+docker run --name vtest docker_razor/vtest
+
+驗證
+docker start -a vtest
+
+刪除
+docker rm -f vtest
+```
+
+------
+
