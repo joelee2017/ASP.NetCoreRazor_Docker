@@ -244,3 +244,70 @@ docker push ltm0203/exampleapp:latest
 docker logout
 ```
 
+------
+
+##### 七、Windows自帶容器支持
+
+切換到Windows容器，通過右鍵Docker圖標進行切換。
+
+Switch to Windows containers...
+
+如果出現切換的情況，大多數情況下重啟電腦可以解決這個問題。
+
+
+
+創建一個.NET Core Windows鏡像
+
+```dockerfile
+#mcr.microsoft.com/dotnet/core/ 是微軟的官方鏡像庫
+FROM mcr.microsoft.com/dotnet/core/aspnet:3.1-nanoserver-1903 
+
+COPY dist /app
+WORKDIR /app
+
+#容器運行時所提供的服務端口
+EXPOSE 80
+
+#ENV 命令表示在容器中設置一個環境變量。
+ENV ASPNETCORE_URLS http://+:80
+
+ENTRYPOINT ["dotnet", "YoYoMooc.ExampleApp.dll"]
+```
+
+也可以使用vs內建輔助工具建立
+
+
+
+創建Windows本地鏡像和容器
+
+創建Windows的鏡像和容器的過程與Linux是相同的，我們首先需要在 檔案 根目錄中，打開終端運行以下命令:
+
+```powershell
+dotnet restore ##還原包
+dotnet publish --framework netcoreapp3.1 --configuration Release --output dist
+
+docker build . -t docker_razor/exampleapp:windows -f Dockerfile.windows
+```
+
+為了區別與Linux容器的區別，我們將鏡像名稱命名為docker_razor/exampleapp:windows，添加一個Windows標記，通過參數 -f 指定docker生成的鏡像文件為Dockerfile.windows
+
+完成後確認 docker image ls
+
+```powershell
+確用鏡像
+
+docker run -p 7000:80 --name exampleAppWin yoyomooc/exampleapp:windows
+```
+
+檢查windows容器
+
+```powershell
+容器所在的虛擬網卡地址獲取
+docker inspect exampleAppWin
+
+在Window容器中執行命令
+docker exec -it exampleAppWin cmd
+```
+
+------
+
