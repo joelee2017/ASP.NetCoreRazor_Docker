@@ -12,6 +12,10 @@ https://www.52abp.com/yoyomooc/aspnet-core-mvc-in-docker-index
 
 ------
 
+[TOC]
+
+------
+
 ##### 一、創建RazorPage示範應用程序
 
 建立一個 Asp.Net Core Razor App
@@ -26,6 +30,10 @@ Docker Desktop  網址：https://hub.docker.com/editions/community/docker-ce-des
 
 **注意!!** 若是Windows 10 家用版需要透過「腳本」安裝 Hpler-V 在安裝 Docker Desktop。
 安裝完後，若是跳出提醒確定一下是否 Linux 核心更新未安裝。
+
+摸擬化需開啟請使用powershell
+
+dism.exe /Online /Enable-Feature:Microsoft-Hyper-V /All
 
 WSL2 Linux 核心更新套件 (適用於 x64 電腦) 網址：https://docs.microsoft.com/zh-tw/windows/wsl/install-win10#step-4---download-the-linux-kernel-update-package
 
@@ -224,21 +232,21 @@ docker commit exampleApp4000 ltm0203/exampleapp:changed
 
 ```powershell
 建立一個鏡象
-docker tag razor_docker/exampleapp:latest ltm0203/exampleapp:unchange
+docker tag razor_docker/exampleapp:latest razor_docker/exampleapp:unchange
 
 登入docker hub
 docker login -u 用户名 -p 密码
 
 推送鏡像到倉庫
-docker push ltm0203/exampleapp:changed
-docker push ltm0203/exampleapp:unchange
+docker push razor_docker/exampleapp:changed
+docker push razor_docker/exampleapp:unchange
 
 拉取
 docker pull ltm0203/exampleapp
 
 若不存在請先推送
-docker tag razor_docker/exampleapp:latest ltm0203/exampleapp:latest
-docker push ltm0203/exampleapp:latest
+docker tag razor_docker/exampleapp:latest razor_docker/exampleapp:latest
+docker push razor_docker/exampleapp:latest
 
 使用完後請登出
 docker logout
