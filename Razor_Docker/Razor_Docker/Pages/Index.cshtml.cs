@@ -14,6 +14,15 @@ namespace Razor_Docker.Pages
         private readonly IConfiguration _config;
         public string Message { get; set; }
         public List<Product> Products { get; set; }
+
+        /// <summary>
+        /// 服務器的名稱
+        /// </summary>
+        public string Hostname { get; set; }
+        public string DBHOST { get; set; }
+        public string DBPORT { get; set; }
+        public string DBPASSWORD { get; set; }
+
         public IndexModel(ILogger<IndexModel> logger, IProductRepository repository, IConfiguration config)
         {
             _logger = logger;
@@ -23,7 +32,14 @@ namespace Razor_Docker.Pages
         public void OnGet()
         {
             Message = _config["MESSAGE"] ?? "深入浅出 ASP.NET Core 與 Docker";
+
             Products = _repository.Products.ToList();
+
+
+            Hostname = _config["HOSTNAME"];
+            DBHOST = _config["DBHOST"] ?? "localhost";
+            DBPORT = _config["DBPORT"] ?? "3306";
+            DBPASSWORD = _config["DBPASSWORD"] ?? "bb123456";
         }
     }
 

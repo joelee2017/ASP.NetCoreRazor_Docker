@@ -390,3 +390,282 @@ docker run --name vtest2 -v testdata:/data docker_razor/vtest
 docker inspect docker_razor/vtest
 ```
 
+------
+
+##### 九、ASP.NET Core RazorPage 使用EF Core 連接 MySQL 數據庫
+
+確保後面的課程順利進行，我們先刪除之前的所有容器
+
+```powershell
+docker rm -f $(docker ps -aq)
+```
+
+
+
+拉取並檢查數據庫鏡像
+
+```powershell
+docker pull mysql:8.0
+
+查看 inspect
+docker inspect mysql:8.0
+```
+
+
+
+創建一個數據庫容器及Docker卷
+
+```powershell
+docker volume create --name productdata
+```
+
+
+
+創建一個MySQL容器，將容器中的指定的目錄/var/lib/mysql關聯到我們創建的捲上。
+
+```powershell
+docker run -d --name mysql -v productdata:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=bb123456 -e bind-address=0.0.0.0  mysql:8.0.0
+```
+
+完整的內容解釋，查看以下表格:
+
+| 名稱                            | 描述                                                         |
+| :------------------------------ | ------------------------------------------------------------ |
+| -d                              | 這個參數會將運行中的docker容器在後台運行。                   |
+| --name                          | 此參數是將當前的mysql鏡像，創建的容器指定一個名稱。          |
+| -e MYSQL_ROOT_PASSWORD=bb123456 | -e 表示的是環境變量。在這裡，MySQL容器使用MYSQL_ROOT_PASSWORD環境變量來設置連接數據庫所需的密碼，在這裡我設置的密碼為bb123456，你可以自行更改。 |
+| -e bind-address                 | 這個環境變量是保障MySQL能夠連接到當前的網絡接口上            |
+| -v productdata:/var/lib/mysql   | 該參數告訴Docker有一個卷名稱為`productdata`提供給容器中的`/var/lib/mysql `文件夾 |
+
+
+
+運行以上命令完成後，我們可以使用以下命令進行跟踪容器的狀態：
+
+```powershell
+docker logs -f mysql
+```
+
+
+
+為RazorPage項目添加MySQL支持
+
+```asp.net
+<ItemGroup>      
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="3.1.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="3.1.1" />
+  </ItemGroup>
+```
+
+
+
+進行包的還原，還原成功，表示nuget包安裝成功
+
+```powershell
+dotnet restore
+```
+
+
+
+創建一個連接數據庫的倉儲類
+
+添加一個名為`ProductDbContext.cs`的文件到專案目錄下的Models文件夾中。
+
+```asp.net
+namespace YoYoMooc.ExampleApp.Models
+{
+    public class ProductDbContext : DbContext
+    {
+        public ProductDbContext(DbContextOptions<ProductDbContext> options)
+        : base(options)
+        {
+        }
+        public DbSet<Product> Products { get; set; }
+    }
+}
+
+```
+
+應用程序的其他地方提供對數據的訪問，請添加一個名為的文件將`DataProductRepository.cs`添加到`專案/Models`文件夾
+
+```asp.net
+public class DataProductRepository : IProductRepository
+    {
+        private ProductDbContext context;
+
+        public DataProductRepository(ProductDbContext ctx)
+        {
+            context = ctx;
+        }
+
+        public IQueryable<Product> Products => context.Products;
+    }
+```
+
+添加一些種子數據到數據庫中，需要在`專案/Models`文件夾，添加一個種子數據文件`SeedData.cs`文件
+
+```powershell
+/// <summary>
+    /// 種子數據
+    /// </summary>
+    public static class SeedData
+    {
+        /// <summary>
+        /// 初始化數據庫和種子數據
+        /// </summary>
+        /// <param name="dbcontext"></param>
+
+        public static IApplicationBuilder UseDataInitializer(this IApplicationBuilder builder)
+        {
+            using (var scope = builder.ApplicationServices.CreateScope())
+            {
+
+                var dbcontext = scope.ServiceProvider.GetService<ProductDbContext>();
+                System.Console.WriteLine("開始執行遷移數據庫...");
+                dbcontext.Database.Migrate();
+                System.Console.WriteLine("數據庫遷移完成...");
+                if (!dbcontext.Products.Any())
+                {
+                    System.Console.WriteLine("開始創建種子數據中...");
+                    dbcontext.Products.AddRange(
+                    new Product("空调", "家用電器", 2750),
+                    new Product("電視機", "家用電器", 2448.95m),
+                    new Product("洗衣機 ", "家用電器", 1449.50m),
+                    new Product("油烟機 ", "家用電器", 3454.95m),
+                    new Product("冰箱", "家用電器", 9500),
+                    new Product("猪肉 ", "食品", 36),
+                    new Product("牛肉 ", "食品", 49.95m),
+                    new Product("雞肉 ", "食品", 22),
+                    new Product("鴨肉", "食品", 18)
+                    );
+                    dbcontext.SaveChanges();
+                }
+                else
+                {
+                    System.Console.WriteLine("無需創建種子數據...");
+                }
+
+
+            }
+            return builder;
+
+        }
+
+    }
+```
+
+配置服務
+
+需要將EF Core以及自定義的種子數據，配置到應用程序的服務中。打開`startup.cs`文件
+
+```asp.net
+   public void ConfigureServices(IServiceCollection services)
+        {
+            // services.AddTransient<IProductRepository, MockProductRepository>();
+
+            services.AddTransient<IProductRepository, DataProductRepository>();
+
+            services.AddRazorPages();
+
+
+            var host = Configuration["DBHOST"] ?? "localhost";
+            var port = Configuration["DBPORT"] ?? "3306";
+            var password = Configuration["DBPASSWORD"] ?? "bb123456";
+
+
+            var connectionStr = $"server={host};userid=root;pwd={password};"
+            + $"port={port};database=products";
+
+
+            services.AddDbContextPool<ProductDbContext>(options =>
+            options.UseMySql(connectionStr));
+
+        }
+```
+
+然後在`startup.cs`文件中`Configure`方法中，配置下種子數據。
+
+```asp.net
+app.UseDataInitializer();
+```
+
+創建數據遷移
+
+建Entity Framework Core的遷移記錄，我們使用的是EF Core中的代碼優先的特性，它會自動將我們的領域模型即實體，在數據庫中創建表和結構。
+
+```powershell
+Add-migration Initial
+
+無報錯
+update-database
+運行結果為錯誤，原因無mysql容器服務運行中，請先刪除mysql
+docker rm 鏡像id -f
+
+運行mysql容器服務
+docker run -d  -p 3253:3306  --name mysql -v productdata:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=bb123456  -e bind-address=0.0.0.0 mysql:8.0
+```
+
+修改Pages內容
+
+打開項目專案中的Pages`Index.cshtml.cs`文件，添加幾個屬性值
+
+```
+  /// <summary>
+  /// 服務器的名稱
+  /// </summary>
+  public string Hostname { get; set; }
+  public string DBHOST { get; set; }
+  public string DBPORT { get; set; }
+  public string DBPASSWORD { get; set; }
+```
+
+然後修改OnGet方法代碼
+
+```asp.net
+
+   public void OnGet()
+        {
+            Message = _config["MESSAGE"] ?? "深入浅出 ASP.NET Core 與 Docker";
+
+            Products = _repository.Products.ToList();
+
+
+            Hostname = _config["HOSTNAME"];
+            DBHOST = _config["DBHOST"] ?? "localhost";
+            DBPORT = _config["DBPORT"] ?? "3306";
+            DBPASSWORD = _config["DBPASSWORD"] ?? "bb123456";
+
+        }
+```
+
+創建一個MVC的應用鏡像
+
+```powershell
+dotnet publish --framework net5.0 --configuration Release --output dist 
+
+docker build  -t razor_docker/exampleapp -f "Razor_Docker/Dockerfile" .
+```
+
+清理畫面
+
+```powershell
+clear
+```
+
+測試應用程序
+
+使MVC容器與數據庫對話，我需要知道Docker分配給的IP地址MySQL容器。輸入以下命令，檢查Docker的配置虛擬網絡。
+
+```powershell
+docker network inspect bridge
+```
+
+執行以下命令，在後台創建和啟動MVC容器，然後再監視它的輸出內容：
+
+```
+docker run -d --name productapp -p 3001:80 -e DBHOST=172.17.0.2 -e DBPASSWORD=bb123456 razor_docker/exampleapp
+docker logs -f productapp
+```
+

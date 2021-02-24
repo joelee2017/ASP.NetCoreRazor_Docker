@@ -1,6 +1,6 @@
 FROM alpine:3.9
 
-VOLUME /data
+docker build . -t docker_razor/vtest -f "Razor_Docker/Dockerfile.volumes"
 
 WORKDIR /data
 ENTRYPOINT (test -e message.txt && echo "文件已存在" \

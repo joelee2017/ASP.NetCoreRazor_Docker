@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -19,8 +20,22 @@ namespace Razor_Docker
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddTransient<IProductRepository, MockProductRepository>();
+            //services.AddTransient<IProductRepository, MockProductRepository>();
+            services.AddTransient<IProductRepository, DataProductRepository>();
+
             services.AddRazorPages();
+
+
+            var host = Configuration["DBHOST"] ?? "localhost";
+            var port = Configuration["DBPORT"] ?? "3306";
+            var password = Configuration["DBPASSWORD"] ?? "bb123456";
+
+
+            var connectionStr = $"server={host};userid=root;pwd={password};"
+            + $"port={port};database=products";
+
+
+            services.AddDbContextPool<ProductDbContext>(options => options.UseMySql(connectionStr));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -41,6 +56,8 @@ namespace Razor_Docker
             app.UseStaticFiles();
 
             app.UseRouting();
+
+            app.UseDataInitializer();
 
             app.UseAuthorization();
 
