@@ -33,7 +33,6 @@ namespace Razor_Docker
 
             var connectionStr = $"server={host};userid=root;pwd={password};port={port};database=products";
 
-
             services.AddDbContextPool<ProductDbContext>(options => 
             options.UseMySql(connectionStr));
         }

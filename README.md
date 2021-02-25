@@ -372,7 +372,7 @@ VOLUME /data
 WORKDIR /data
 ENTRYPOINT (test -e message.txt && echo "文件已存在" \
     || (echo "創建文件中..." \
-    && echo 你好, Docker 时间: $(date '+%X') > message.txt)) && cat message.txt
+    && echo 你好, Docker 時間: $(date '+%X') > message.txt)) && cat message.txt
 ```
 
 添加了參數`VOLUME`,該命令會告訴Docker，任何存在`/data`中的文件都會被保存到一個卷中。我們是事先知道我們的數據文件會存放在/data文件夾中，所以才會指定路徑到/data中。
@@ -407,7 +407,11 @@ docker inspect docker_razor/vtest
 確保後面的課程順利進行，我們先刪除之前的所有容器
 
 ```powershell
+刪除所有容器
 docker rm -f $(docker ps -aq)
+
+刪除所有鏡像
+docker rmi $(docker images -q)
 ```
 
 
@@ -434,7 +438,7 @@ docker volume create --name productdata
 創建一個MySQL容器，將容器中的指定的目錄/var/lib/mysql關聯到我們創建的捲上。
 
 ```powershell
-docker run -d --name mysql -v productdata:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=bb123456 -e bind-address=0.0.0.0  mysql:8.0.0
+docker run -d --name mysql -v productdata:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=bb123456 -e bind-address=0.0.0.0  mysql:8.0
 ```
 
 完整的內容解釋，查看以下表格:
@@ -613,6 +617,7 @@ update-database
 運行結果為錯誤，原因無mysql容器服務運行中，請先刪除mysql
 docker rm 鏡像id -f
 
+目前我們沒有映射端口到的宿主主機，所以無法訪問。如果要本地訪問請執行以下命令
 運行mysql容器服務
 docker run -d  -p 3253:3306  --name mysql -v productdata:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=bb123456  -e bind-address=0.0.0.0 mysql:8.0
 ```
@@ -662,6 +667,7 @@ docker build  -t razor_docker/exampleapp -f "Razor_Docker/Dockerfile" .
 
 ```powershell
 clear
+cls
 ```
 
 測試應用程序

@@ -1,8 +1,6 @@
 FROM alpine:3.9
 
-docker build . -t docker_razor/vtest -f "Razor_Docker/Dockerfile.volumes"
-
 WORKDIR /data
 ENTRYPOINT (test -e message.txt && echo "文件已存在" \
     || (echo "創建文件中..." \
-    && echo 你好, Docker 时间： $(date '+%X') > message.txt)) && cat message.txt
+    && echo 你好, Docker 時間： $(date '+%X') > message.txt)) && cat message.txt
