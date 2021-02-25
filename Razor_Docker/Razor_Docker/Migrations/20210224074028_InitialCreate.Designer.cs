@@ -8,8 +8,8 @@ using Razor_Docker.Models;
 namespace Razor_Docker.Migrations
 {
     [DbContext(typeof(ProductDbContext))]
-    [Migration("20210224032131_Initial")]
-    partial class Initial
+    [Migration("20210224074028_InitialCreate")]
+    partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {

@@ -1,14 +1,16 @@
-
-
 # ASP.NetCoreRazor_Docker
 
 Docker練習
 
 參考源：深入浅出 ASP.NET Core 与 Docker 入门课程目录
 
-建議配合該視頻影片、圖文進行學習
+建議配合該視頻影片、圖文進行學習，本系列教學尚未完結請自行追蹤。
 
 https://www.52abp.com/yoyomooc/aspnet-core-mvc-in-docker-index
+
+下文為學習記錄補充筆記。
+
+[TOC]
 
 ------
 
@@ -361,7 +363,7 @@ VOLUME /data
 
 WORKDIR /data
 ENTRYPOINT (test -e message.txt && echo "文件已存在" \
-    || (echo "创建文件中..." \
+    || (echo "創建文件中..." \
     && echo 你好, Docker 时间: $(date '+%X') > message.txt)) && cat message.txt
 ```
 
@@ -598,7 +600,7 @@ app.UseDataInitializer();
 ```powershell
 Add-migration Initial
 
-無報錯
+執行完成後，沒有任何報錯,如果你想手動生成數據庫
 update-database
 運行結果為錯誤，原因無mysql容器服務運行中，請先刪除mysql
 docker rm 鏡像id -f
@@ -662,6 +664,22 @@ clear
 docker network inspect bridge
 ```
 
+此命令的響應將顯示Docker如何配置虛擬網絡和將包括一個容器部分，其中顯示連接到網絡的容器和分配給它們的IP地址。
+
+應該只有一個容器，其名稱字段為mysql。請注意IPv4Address字段，如下所示:
+
+```powershell
+"Containers": {
+            "5aea9ac5557d172117ed56baba66fd070acc9421198344dfda0becae00f5ebb0": {
+                "Name": "mysql",
+                "EndpointID": "a01a73de5b19359ed7a0043667305fbfe3277678bef588807ed0b5fb51608503",
+                "MacAddress": "02:42:ac:11:00:02",
+                "IPv4Address": "172.17.0.2/16",
+                "IPv6Address": ""
+            },
+}
+```
+
 執行以下命令，在後台創建和啟動MVC容器，然後再監視它的輸出內容：
 
 ```
@@ -669,3 +687,84 @@ docker run -d --name productapp -p 3001:80 -e DBHOST=172.17.0.2 -e DBPASSWORD=bb
 docker logs -f productapp
 ```
 
+------
+
+##### 十、在Docker中創建自定義虛擬網路
+
+為了方便我們後面章節的學習刪除當前所有的容器：
+
+```powershell
+docker rm -f $(docker ps -aq)
+```
+
+創建自定義網絡也很簡單，我們通過創建兩個網絡來練習分別為frontend（前端）和backend（後端）。
+
+```powershell
+docker network create frontend
+docker network create backend
+
+frontend網絡backend將被用於在MVC容器和MySQL容器之間進行數據查詢。我們可以通過docker network ls查詢創建的自定義網絡。
+```
+
+將容器連接到自定義網絡
+
+一旦您創建了自定義網絡，您可以使用`--network`參數，它可以與`docker create`和`docker run`命令一起使用。
+
+現在我們創建一個新的數據庫容器，然後將其鏈接到初始網絡中。命令如下：
+
+```powershell
+docker run -d --name mysql -v productdata:/var/lib/mysql --network backend -e MYSQL_ROOT_PASSWORD=bb123456 -e bind-address=0.0.0.0 mysql:latest
+
+在這裡我們看到了一個新參數`--network`這個參數用於將容器分配給一個網絡。在這，容器被分配給稱為`backend`的網絡。
+```
+
+輸入以下命令測試DNS
+
+```powershell
+docker run -it --rm --network backend alpine:3.9 ping -c 3 mysql
+
+該命令使用Alpine Linux發行版，並向一個名為mysql的主機執行ping命令，Docker會自動解析到`backend`網絡上分配給mysql容器的IP地址。
+
+該命令將產生以下結果。
+PS C:\Users\Administrator> docker run -it --rm --network backend alpine:3.9 ping -c 3 mysql
+PING mysql (172.19.0.2): 56 data bytes
+64 bytes from 172.19.0.2: seq=0 ttl=64 time=0.158 ms
+64 bytes from 172.19.0.2: seq=1 ttl=64 time=0.142 ms
+64 bytes from 172.19.0.2: seq=2 ttl=64 time=0.123 ms
+
+--- mysql ping statistics ---
+3 packets transmitted, 3 packets received, 0% packet loss
+round-trip min/avg/max = 0.123/0.141/0.158 ms
+
+ping命令完成後，容器將退出並自動刪除。
+```
+
+創建MVC容器
+
+```powershell
+我們現在利用DNS提供的解析名稱功能，所以不需要進行端口的映射，現在創建多個MVC應用程序，只需要保證容器名稱是唯一的即可。輸入以下命令創建三個不同的容器。
+
+docker create --name productapp1 -e DBHOST=mysql -e MESSAGE="第1台服务器" --network backend yoyomooc/exampleapp
+docker create --name productapp2 -e DBHOST=mysql -e MESSAGE="第2台服务器" --network backend yoyomooc/exampleapp
+docker create --name productapp3 -e DBHOST=mysql -e MESSAGE="第3台服务器" --network backend yoyomooc/exampleapp
+
+docker run和docker create命令只能將容器連接到一個網絡。當前的命令中我們建立鏈接了backend網絡，它是必須需要連接的，因為我們的MySQL數據庫在這裡。
+
+同時我們也需要將mvc容器連接到前端網絡-frontend中。命令如下：
+docker network connect frontend productapp1
+docker network connect frontend productapp2
+docker network connect frontend productapp3
+
+docker network connect命令是將現有容器連接到我們定義的虛擬網絡中，以上命令是三個MVC容器都連接到frontend網絡中。
+
+現在所有容器已經連接完畢了，現在我們需要啟動這些容器，命令如下：
+docker start productapp1 productapp2 productapp3
+
+當前我們的MVC容器被創建了，但是都沒有映射端口，這意味著它們只能通過Docker的虛擬網絡進行訪問，我們無法通過主機的操作系統訪問。
+```
+
+------
+
+
+
+##### 尚未完結-部份功能也尚未實作完成!!

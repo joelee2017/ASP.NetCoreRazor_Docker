@@ -31,11 +31,11 @@ namespace Razor_Docker
             var password = Configuration["DBPASSWORD"] ?? "bb123456";
 
 
-            var connectionStr = $"server={host};userid=root;pwd={password};"
-            + $"port={port};database=products";
+            var connectionStr = $"server={host};userid=root;pwd={password};port={port};database=products";
 
 
-            services.AddDbContextPool<ProductDbContext>(options => options.UseMySql(connectionStr));
+            services.AddDbContextPool<ProductDbContext>(options => 
+            options.UseMySql(connectionStr));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
