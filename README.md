@@ -430,6 +430,7 @@ docker inspect mysql:8.0
 創建一個數據庫容器及Docker卷
 
 ```powershell
+不用預先建立，避免下一步驟失敗
 docker volume create --name productdata
 ```
 
@@ -438,6 +439,7 @@ docker volume create --name productdata
 創建一個MySQL容器，將容器中的指定的目錄/var/lib/mysql關聯到我們創建的捲上。
 
 ```powershell
+該指令會幫忙建立 volume 所以不用額外做。
 docker run -d --name mysql -v productdata:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=bb123456 -e bind-address=0.0.0.0  mysql:8.0
 ```
 
@@ -696,7 +698,7 @@ docker network inspect bridge
 
 執行以下命令，在後台創建和啟動MVC容器，然後再監視它的輸出內容：
 
-```
+```powershell
 docker run -d --name productapp -p 3001:80 -e DBHOST=172.17.0.2 -e DBPASSWORD=bb123456 razor_docker/exampleapp
 docker logs -f productapp
 ```
