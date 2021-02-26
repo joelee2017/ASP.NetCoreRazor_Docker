@@ -760,9 +760,9 @@ ping命令完成後，容器將退出並自動刪除。
 ```powershell
 我們現在利用DNS提供的解析名稱功能，所以不需要進行端口的映射，現在創建多個MVC應用程序，只需要保證容器名稱是唯一的即可。輸入以下命令創建三個不同的容器。
 
-docker create --name productapp1 -e DBHOST=mysql -e MESSAGE="第1台服务器" --network backend yoyomooc/exampleapp
-docker create --name productapp2 -e DBHOST=mysql -e MESSAGE="第2台服务器" --network backend yoyomooc/exampleapp
-docker create --name productapp3 -e DBHOST=mysql -e MESSAGE="第3台服务器" --network backend yoyomooc/exampleapp
+docker create --name productapp1 -e DBHOST=mysql -e MESSAGE="第1台服務器" --network backend yoyomooc/exampleapp
+docker create --name productapp2 -e DBHOST=mysql -e MESSAGE="第2台服務器" --network backend yoyomooc/exampleapp
+docker create --name productapp3 -e DBHOST=mysql -e MESSAGE="第3台服務器" --network backend yoyomooc/exampleapp
 
 docker run和docker create命令只能將容器連接到一個網絡。當前的命令中我們建立鏈接了backend網絡，它是必須需要連接的，因為我們的MySQL數據庫在這裡。
 
